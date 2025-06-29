@@ -20,10 +20,10 @@ type TemplConfig struct {
 }
 
 var templates = []TemplConfig{
-	{"templates/config.yaml.tmpl", "config"},
-	{"templates/script.lua", "scripts"},
-	{"templates/docker-compose.yaml.tmpl", ""},
-	{"templates/Taskfile.yaml", ""},
+	{"./templates/config.yaml.tmpl", "config"},
+	{"./templates/script.lua", "scripts"},
+	{"./templates/docker-compose.yaml.tmpl", ""},
+	{"./templates/Taskfile.yaml", ""},
 }
 
 func generateFiles(config *GenConfig) {
