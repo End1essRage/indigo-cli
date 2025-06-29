@@ -1,0 +1,35 @@
+bot:
+  mode: "polling"
+  allow_group: false
+  is_admin: false
+  debug: false
+  roles: false
+
+cache:
+  type: {{ .CacheType }}
+  {{ if eq .CacheType "redis" }}redis:
+    address: localhost:6379
+    password: ""
+    db: 0
+  {{ end }}
+
+storage:
+  type: {{ .StorageType }}
+  {{ if eq .StorageType "file" }}file:
+    path: storage.json
+  {{ else if eq .StorageType "mongo" }}mongo:
+    address: localhost:27017
+    login: ""
+    password: ""
+    db: indigo
+  {{ end }}
+
+media:
+  type: local
+
+commands:
+keyboards:
+forms:
+interceptors:
+modules:
+secrets:

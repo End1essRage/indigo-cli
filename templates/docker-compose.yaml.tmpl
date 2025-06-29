@@ -1,0 +1,83 @@
+services:
+{{ if eq .CacheType "redis" }}
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - bot-network
+{{ end }}
+{{ if eq .StorageType "mongo" }}
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin  # Опционально
+      MONGO_INITDB_ROOT_PASSWORD: password  # Опционально
+    networks:
+      - bot-network
+{{ end }}
+  bot:
+    image: end1essrage/indigo:latest
+    ports:
+      - "8080:8080"
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+    volumes:
+      - data_dir:/app/data
+      - scripts_dir:/app/scripts
+      - config_dir:/app/config
+    depends_on:
+{{ if eq .CacheType "redis" }}
+      - redis
+{{ end }}
+{{ if eq .StorageType "mongo" }}
+      - mongo
+{{ end }}
+    networks:
+      - bot-network
+
+volumes:
+{{ if eq .CacheType "redis" }}
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/redis_data 
+{{ end }}
+{{ if eq .StorageType "mongo" }}
+  mongo_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/mongo_data 
+{{ end }}
+  data_dir:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/data 
+  scripts_dir:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./bot/scripts 
+  config_dir:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./bot/config
+
+networks:
+  bot-network:
+    driver: bridge
