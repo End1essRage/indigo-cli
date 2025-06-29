@@ -1,12 +1,16 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"html/template"
 	"os"
 	"path"
 	"strings"
 )
+
+//go:embed templates/*
+var templateFS embed.FS
 
 type GenConfig struct {
 	CacheType   string
@@ -20,44 +24,50 @@ type TemplConfig struct {
 }
 
 var templates = []TemplConfig{
-	{"./templates/config.yaml.tmpl", "config"},
-	{"./templates/script.lua", "scripts"},
-	{"./templates/docker-compose.yaml.tmpl", ""},
-	{"./templates/Taskfile.yaml", ""},
+	{"config.yaml.tmpl", "config"},
+	{"script.lua", "scripts"},
+	{"docker-compose.yaml.tmpl", ""},
+	{"Taskfile.yaml", ""},
 }
 
 func generateFiles(config *GenConfig) {
 	for _, t := range templates {
-		_, name := path.Split(t.TemplatePath)
-		if err := generateFile(t.TemplatePath, name, t.OutputPath, config); err != nil {
-			fmt.Printf("%s", err.Error())
+		if err := generateFile(t.TemplatePath, t.OutputPath, config); err != nil {
+			fmt.Printf("Error generating %s: %v\n", t.TemplatePath, err)
 		}
 	}
 }
 
-func generateFile(tmplPath, tmplName, outputPath string, config *GenConfig) error {
-	//парсим файл
-	tmpl, err := template.ParseFiles(tmplPath)
+func generateFile(tmplName, outputPath string, config *GenConfig) error {
+	// Читаем шаблон из встроенной файловой системы
+	tmplContent, err := templateFS.ReadFile("templates/" + tmplName)
 	if err != nil {
-		fmt.Printf("%s", err.Error())
-		return err
+		return fmt.Errorf("error reading template: %w", err)
 	}
 
-	outPath := path.Join(outputPath, wipeTmplExt(tmplName))
+	// Создаем шаблон из строки
+	tmpl, err := template.New(tmplName).Parse(string(tmplContent))
+	if err != nil {
+		return fmt.Errorf("error parsing template: %w", err)
+	}
 
-	//если задали выходную папку
+	// Формируем путь для выходного файла
+	outputFileName := wipeTmplExt(tmplName)
+	fullOutputPath := path.Join(outputPath, outputFileName)
 	if config.OutputPath != "" {
-		os.MkdirAll(path.Join(config.OutputPath, outputPath), os.ModeDir)
-		outPath = path.Join(config.OutputPath, outPath)
-	} else {
-		os.MkdirAll(outputPath, os.ModeDir)
+		fullOutputPath = path.Join(config.OutputPath, fullOutputPath)
 	}
 
-	//создаем и записываем в файл
-	outputFile, err := os.Create(outPath)
+	// Создаем директории, если нужно
+	dir := path.Dir(fullOutputPath)
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		return fmt.Errorf("error creating directories: %w", err)
+	}
+
+	// Создаем и записываем файл
+	outputFile, err := os.Create(fullOutputPath)
 	if err != nil {
-		fmt.Printf("%s", err.Error())
-		return err
+		return fmt.Errorf("error creating file: %w", err)
 	}
 	defer outputFile.Close()
 
@@ -65,12 +75,8 @@ func generateFile(tmplPath, tmplName, outputPath string, config *GenConfig) erro
 }
 
 func wipeTmplExt(path string) string {
-	stringShards := strings.Split(path, ".")
-	countShard := len(stringShards)
-
-	if stringShards[countShard-1] == "tmpl" {
-		stringShards[countShard-1] = ""
+	if strings.HasSuffix(path, ".tmpl") {
+		return strings.TrimSuffix(path, ".tmpl")
 	}
-
-	return strings.Join(stringShards, ".")
+	return path
 }
