@@ -12,12 +12,6 @@ import (
 //go:embed templates/*
 var templateFS embed.FS
 
-type GenConfig struct {
-	CacheType   string
-	StorageType string
-	OutputPath  string
-}
-
 type TemplConfig struct {
 	TemplatePath string
 	OutputPath   string

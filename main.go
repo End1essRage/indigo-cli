@@ -12,15 +12,22 @@ func main() {
 	var cache string
 	var storage string
 	var output string
+	var mode string
 
 	cmd := &cli.Command{
 		Name:  "new",
 		Usage: "create new bot",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
+				Name:        "mode",
+				Value:       "polling",
+				Usage:       "tg bot mode webhook or (polling)",
+				Destination: &mode,
+			},
+			&cli.StringFlag{
 				Name:        "cache",
 				Value:       "memory",
-				Usage:       "cahe type redis or (memory)",
+				Usage:       "cache type redis or (memory)",
 				Destination: &cache,
 			},
 			&cli.StringFlag{
@@ -38,7 +45,7 @@ func main() {
 			},
 		},
 		Action: func(context.Context, *cli.Command) error {
-			generateFiles(&GenConfig{cache, storage, output})
+			generateFiles(&GenConfig{mode, cache, storage, output})
 			return nil
 		},
 	}

@@ -1,11 +1,20 @@
-bot:
-  mode: "polling"
-  allow_group: false
-  is_admin: false
-  debug: false
-  roles: false
+# Пару слов:
+# приоритет в обработке сообщения: форма -> роль-фильтр -> interceptors -> обработка
+# команда /help работает автоматически
 
-cache:
+bot:
+  mode: {{ .BotMode }}
+  {{ if eq .BotMode "webhook" }}webhook:
+    address: https://www.google.com:8443 # Адресс веб-хука
+    cert: "cert.pem" # Путь до сертификата
+  {{ end }}
+  allow_group: false # Обрабатывает ли бот запросы если добавлен в группу
+  is_admin: false # Используется ли бот как админ канала или группы
+  debug: false # Режим дебага (логирование)
+  roles: false # Используется ли ролевой доступ для команд
+
+# Настройка кэша
+cache: 
   type: {{ .CacheType }}
   {{ if eq .CacheType "redis" }}redis:
     address: localhost:6379
@@ -13,10 +22,11 @@ cache:
     db: 0
   {{ end }}
 
+# Настройка хранилища
 storage:
   type: {{ .StorageType }}
   {{ if eq .StorageType "file" }}file:
-    path: storage.json
+    path: "./data" # Путь к папке с файлами
   {{ else if eq .StorageType "mongo" }}mongo:
     address: localhost:27017
     login: ""
@@ -24,12 +34,77 @@ storage:
     db: indigo
   {{ end }}
 
+# Настройки хранения медиафайлов
 media:
   type: local
 
+# Команды бота
 commands:
+  - name: "start"                 # для использования /start
+    description: "Приветствие"    # описание, для команды /help
+    script: "welcome.lua"         # путь к скрипту
+#   reply: "hello!"               # простой текстовый ответ
+#   role: "all"                   # перечисляются роли, которым доступна команда
+#   keyboard: "main_menu"         # вызов клавиатуры, аналогично имени(name) клавиатуры
+#   form: "user_registration"     # вызов формы, аналогично имени(name) формы
+
+
+# Тг клавиатуры
 keyboards:
+#  - name: "yes_no"                      # название клавиатуры, используется для ее вызова
+#    message: "Подтвердите выбор:"       # сообщение с кнопками
+#    buttons:
+#      - row:                            # на каждую строку
+#          - text: "btn1"                # текст кнопки
+#            data: "my_data"             # данные, для последущего считывания в скрипте
+#            script: "btn1_handler.lua"  # скрипт, вызываемы при нажатии
+#      - row:                            
+#          - text: "да"                  
+#            data: "yes"
+#            script: "apply_result.lua"  # один и тот же скрипт,но благодаря data, мы можем понять какую конкретно кнопку нажали
+#          - text: "нет"
+#            data: "no"
+#            script: "apply_result.lua"  # скрипт, вызываемы при нажатии      
+
+# Формы - пошаговые опросники для заполнения и группировки данных различных типов
 forms:
+#  - name: "user_registration"                   # название формы, используется для ее вызова
+#    description: "Регистрация пользователя"
+#    script: "user_regestration.lua"             # скрипт, вызывающийся в конце формы
+#    stages:
+#      - field: "user_name"                      # по имени поля потом можно достать данные
+#        message: "Введите ваше имя:"            # сообщение перед пользовательским вводом
+#        validation:                             # ниже правило валидации допускающее только строку длиной >2 символов
+#          type: "string"                        # бот будет ожидать именно сообщения 
+#          min_length: 2
+#      - field: "user_age"
+#        message: "Выберите возрастную группу:"
+#        keyboard: "age_groups"                  # так же в качестве обработчика можно использовать клавиатуру (попадет data)
+
+# Настройка апи для интеграции с ботом
+api:
+#  address: ":8082"
+#  endpoints:
+#    - path: "/test-get"
+#      method: "GET"
+#      script: "api_test.lua"
+#    - path: "/test"
+#      method: "POST"
+#      scheme: "scheme_1"
+#      script: "api_test.lua"
+#  schemes:
+#    - name: "scheme_1"
+#      fields:
+#        - name: "message"
+#          type: "string"
+#          required: true
+#          source: "body"
+#        - name: "X-Request-Id"
+#          type: "string"
+#          required: false
+#          source: "header"
+
+# Перехватчики - обработка сообщений(не команд и не в рамках форм)
 interceptors:
+# Настройки модулей которые можно вызвать через interceptor
 modules:
-secrets:
