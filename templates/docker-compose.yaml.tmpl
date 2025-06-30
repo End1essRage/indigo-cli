@@ -32,10 +32,10 @@ services:
       - data_dir:/app/data
       - scripts_dir:/app/scripts
       - config_dir:/app/config
-    depends_on:
+{{ if or (eq .CacheType "redis") (eq .StorageType "mongo") }}
+    depends_on:{{ end }}
 {{ if eq .CacheType "redis" }}
-      - redis
-{{ end }}
+      - redis{{ end }}
 {{ if eq .StorageType "mongo" }}
       - mongo
 {{ end }}

@@ -21,7 +21,6 @@ var templates = []TemplConfig{
 	{"config.yaml.tmpl", "bot/config"},
 	{"welcome.lua", "bot/scripts"},
 	{"docker-compose.yaml.tmpl", ""},
-	{"Taskfile.yaml", ""},
 }
 
 func generateFiles(config *GenConfig) {
