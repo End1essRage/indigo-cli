@@ -19,7 +19,7 @@ type TemplConfig struct {
 
 var templates = []TemplConfig{
 	{"config.yaml.tmpl", "bot/config"},
-	{"script.lua", "bot/scripts"},
+	{"welcome.lua", "bot/scripts"},
 	{"docker-compose.yaml.tmpl", ""},
 	{"Taskfile.yaml", ""},
 }
